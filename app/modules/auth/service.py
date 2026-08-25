@@ -73,22 +73,24 @@ def user_register(req, db: Session):
 
 
 def user_registered_otp_verified(req, db: Session):
-    result = otp_verify(req, db)
-    if not result:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid token."
-        )
-
     user = db.query(User).filter(User.phone == req.phone).first()
 
-    user.verified = True
-    db.commit()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='User not found.'
+        )
+    
+    result = otp_verify(req, db)
 
-    # Token
-    token = create_token(user.id, user.phone, user.role, user.permissions)
+    if result:
+        user.verified = True
+        db.commit()
+        # Token
+        token = create_token(user.id, user.phone, user.role, user.permissions)
+        return token
 
-    return token
+    return False
 
 
 

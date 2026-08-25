@@ -11,7 +11,7 @@ from .service import (
 
 router = APIRouter(prefix='/auth', tags=["Auth"])
 
-@router.post('/register')
+@router.post('/register', description='New user registration')
 def register(req: RegisterSchema, db: Session = Depends(get_db)):
     return user_register(req, db)
 
