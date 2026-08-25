@@ -6,15 +6,10 @@ from sqlalchemy.orm import Session
 from app.modules.user.model import User, Role
 from app.modules.otp.model import OTP
 from app.utils.permission import Permissions
-from app.utils.otp_service import (
-    hash_otp,
-    generate_otp,
-    get_otp_expire_time,
-)
+from app.utils.otp_service import create_otp_record, verify_otp
 
 
 def user_register(req, db: Session):
-
     # Check if user already exists
     existing_user = (
         db.query(User)
@@ -46,9 +41,7 @@ def user_register(req, db: Session):
         )
         db.add(new_user)
 
-        # -----------------------------------
         # Mark all previous OTPs as verified
-        # -----------------------------------
         db.query(OTP).filter(
             OTP.phone == req.phone,
             OTP.verified == False
@@ -59,33 +52,62 @@ def user_register(req, db: Session):
             synchronize_session=False
         )
 
-        # -----------------------------------
         # Generate new OTP
-        # -----------------------------------
-        otp = generate_otp()
-        hashed_otp = hash_otp(otp)
-        expire_time = get_otp_expire_time()
+        new_otp_record, plan_otp = create_otp_record(req.phone)
 
-        # Create new OTP
-        new_otp = OTP(
-            phone=req.phone,
-            otp_hash=hashed_otp,
-            verified=False,
-            expire_at=expire_time
-        )
-        db.add(new_otp)
-
-        # Save user + OTP
+        db.add(new_otp_record)
         db.commit()
-        # Refresh objects
         db.refresh(new_user)
-        db.refresh(new_otp)
+        db.refresh(new_otp_record)
 
         # For development only
-        print("New OTP:", otp)
+        print("New OTP:", plan_otp)
 
         return new_user
 
     except Exception:
         db.rollback()
         raise
+
+
+
+def user_registered_otp_verified(req, db: Session):
+    result = otp_verify(req, db)
+    print(result)
+
+
+
+################################ Verify OTP ###################################
+def otp_verify(req, db: Session):
+    otp_record = db.query(OTP).filter(OTP.phone == req.phone, OTP.verified == False).order_by(OTP.id.desc()).first()
+
+    if not otp_record:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='No pending OTP found.'
+        )
+
+    expire_at = otp_record.expire_at
+    if expire_at.tzinfo is None:
+        expire_at = expire_at.replace(tzinfo=timezone.utc)
+    else:
+        expire_at = expire_at.astimezone(timezone.utc)
+
+    if expire_at < datetime.now(timezone.utc):
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail="OTP has expired."
+        )
+
+    is_match = verify_otp(req.otp, otp_record.otp_hash)
+
+    if not is_match:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid OTP"
+        )
+
+    otp_record.verified = True
+    db.commit()
+
+    return is_match

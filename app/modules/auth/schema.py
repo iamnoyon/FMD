@@ -8,4 +8,8 @@ class RegisterSchema(BaseModel):
     road: str = Field(default='10')
     house: str = Field(default='1240')
     flat: str = Field(default='B10')
-    
+
+
+class RegisteredOtpVerified(BaseModel):
+    phone: str = Field(default='01889010239')
+    otp: str = Field(default='12345')
