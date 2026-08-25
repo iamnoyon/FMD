@@ -1,10 +1,14 @@
+import os
+from dotenv import load_dotenv
 from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
 from fastapi import Cookie, Depends, HTTPException, status
 
-SECRET_KEY = 'JWT_SECRET'
-ALGORITHM = 'HS256'
-TOKEN_EXPIRE_TIME = 365 #1 year
+load_dotenv()
+
+SECRET_KEY = os.getenv('JWT_SECRET_KEY')
+ALGORITHM = os.getenv('JWT_ALGORITHM')
+TOKEN_EXPIRE_TIME = os.getenv('JWT_TOKEN_EXPIRE')
 
 def create_token(user_id, phone, role, permissions):
     expire = datetime.now(timezone.utc) + timedelta(days=TOKEN_EXPIRE_TIME)

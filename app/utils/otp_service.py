@@ -1,11 +1,16 @@
+import os
 import secrets
+from dotenv import load_dotenv
 from datetime import datetime, timezone, timedelta
 
 from app.modules.otp.model import OTP
 
+load_dotenv()
+
 from pwdlib import PasswordHash
 pwd_context = PasswordHash.recommended()
 
+#####################
 def generate_otp() -> str:
     return f"{secrets.randbelow(100000):05d}"
 
@@ -15,9 +20,9 @@ def hash_otp(password: str) -> str:
 
 
 def get_otp_expire_time() -> str:
-    # 5 min
-    expireIn = 5
+    expireIn = os.getenv('OTP_EXPIRE_TIME')
     return datetime.now(timezone.utc) + timedelta(minutes=expireIn)
+
 
 def verify_otp(otp, hash_otp) -> bool:
     return pwd_context.verify(otp, hash_otp)
