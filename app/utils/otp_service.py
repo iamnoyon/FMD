@@ -9,7 +9,7 @@ def generate_otp() -> str:
 
 
 def hash_otp(password: str) -> str:
-    return hash(password)
+    return hash.hash(password)
 
 
 def get_otp_expire_time() -> str:
