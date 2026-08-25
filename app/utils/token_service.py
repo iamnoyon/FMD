@@ -33,3 +33,16 @@ def verify_token(token):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expire token."
         )
+
+
+def get_current_user(
+        access_token: str | None = Cookie(default=None) 
+):
+    if not access_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Unauthenticated!'
+        )
+
+    return verify_token(access_token)
+
