@@ -90,8 +90,35 @@ def user_registered_otp_verified(req, db: Session):
         token = create_token(user.id, user.phone, user.role, user.permissions)
         return token
 
-    return False
+    return None
 
+
+
+def resend_otp(req, db: Session):
+    existing_user = db.query(User).filter(User.phone == req.phone).first()
+    if not existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='User not found with this phone number. Please register first!'
+        )
+
+    new_otp_record, plan_otp = create_otp_record(req.phone)
+    db.add(new_otp_record)
+    db.commit()
+    db.refresh(new_otp_record)
+
+    print('Registerd User OTP: ', plan_otp)
+
+    return {
+        "success": True,
+        "status_code": 201,
+        "message": "OTP sent to your number"
+    }
+
+
+
+def user_login(req, db: Session):
+    return user_registered_otp_verified(req, db)
 
 
 ################################ Verify OTP ###################################

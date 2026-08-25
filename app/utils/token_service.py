@@ -8,7 +8,7 @@ load_dotenv()
 
 SECRET_KEY = os.getenv('JWT_SECRET_KEY')
 ALGORITHM = os.getenv('JWT_ALGORITHM')
-TOKEN_EXPIRE_TIME = os.getenv('JWT_TOKEN_EXPIRE')
+TOKEN_EXPIRE_TIME = int(os.getenv('JWT_TOKEN_EXPIRE'))
 
 def create_token(user_id, phone, role, permissions):
     expire = datetime.now(timezone.utc) + timedelta(days=TOKEN_EXPIRE_TIME)

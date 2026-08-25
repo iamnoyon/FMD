@@ -20,7 +20,7 @@ def hash_otp(password: str) -> str:
 
 
 def get_otp_expire_time() -> str:
-    expireIn = os.getenv('OTP_EXPIRE_TIME')
+    expireIn = int(os.getenv('OTP_EXPIRE_TIME'))
     return datetime.now(timezone.utc) + timedelta(minutes=expireIn)
 
 
