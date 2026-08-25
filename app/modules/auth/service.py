@@ -72,7 +72,7 @@ def user_register(req, db: Session):
 
 
 
-def user_registered_otp_verified(req, db: Session):
+def user_login(req, db: Session):
     user = db.query(User).filter(User.phone == req.phone).first()
 
     if not user:
@@ -115,10 +115,6 @@ def resend_otp(req, db: Session):
         "message": "OTP sent to your number"
     }
 
-
-
-def user_login(req, db: Session):
-    return user_registered_otp_verified(req, db)
 
 
 ################################ Verify OTP ###################################

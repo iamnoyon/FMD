@@ -10,15 +10,14 @@ class RegisterSchema(BaseModel):
     flat: str = Field(default='B10')
 
 
-class RegisteredOtpVerified(BaseModel):
-    phone: str = Field(default='01889010239')
+class LoginSchema(BaseModel):
+    phone: str = Field(default='01889010237')
     otp: str = Field(default='12345')
-
 
 class ResendOTP(BaseModel):
     phone: str = Field(default='01889010237')
 
 
-class LoginSchema(BaseModel):
+class VerifyOTP(BaseModel):
     phone: str = Field(default='01889010237')
     otp: str = Field(default='12345')
