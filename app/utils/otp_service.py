@@ -16,7 +16,7 @@ def hash_otp(password: str) -> str:
 
 def get_otp_expire_time() -> str:
     # 5 min
-    expireIn = 1
+    expireIn = 5
     return datetime.now(timezone.utc) + timedelta(minutes=expireIn)
 
 def verify_otp(otp, hash_otp) -> bool:
@@ -36,4 +36,4 @@ def create_otp_record(phone):
         verified = False,
         expire_at = expire_time
     )
-    return {new_otp_record, plan_otp}
+    return (new_otp_record, plan_otp)

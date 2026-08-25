@@ -7,6 +7,7 @@ from app.modules.user.model import User, Role
 from app.modules.otp.model import OTP
 from app.utils.permission import Permissions
 from app.utils.otp_service import create_otp_record, verify_otp
+from app.utils.token_service import create_token
 
 
 def user_register(req, db: Session):
@@ -73,7 +74,21 @@ def user_register(req, db: Session):
 
 def user_registered_otp_verified(req, db: Session):
     result = otp_verify(req, db)
-    print(result)
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid token."
+        )
+
+    user = db.query(User).filter(User.phone == req.phone).first()
+
+    user.verified = True
+    db.commit()
+
+    # Token
+    token = create_token(user.id, user.phone, user.role, user.permissions)
+
+    return token
 
 
 
