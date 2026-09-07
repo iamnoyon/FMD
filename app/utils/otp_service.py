@@ -1,6 +1,8 @@
 import os
 import secrets
 from dotenv import load_dotenv
+from sqlalchemy import update
+from app.core.db import localSession
 from datetime import datetime, timezone, timedelta
 
 from app.modules.otp.model import OTP
@@ -29,6 +31,15 @@ def verify_otp(otp, hash_otp) -> bool:
 
 
 def create_otp_record(phone):
+    db = localSession()
+
+    db.execute(
+        update(OTP)
+        .where(OTP.phone == phone, OTP.verified == False)
+        .values(verified=True)
+    )
+
+    db.commit()
     
     plan_otp = generate_otp()
     hashed_otp = hash_otp(plan_otp)
