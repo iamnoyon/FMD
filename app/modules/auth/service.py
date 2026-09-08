@@ -64,7 +64,12 @@ def user_register(req, db: Session):
         # For development only
         print("New OTP:", plan_otp)
 
-        return new_user
+        return {
+            "success": True,
+            "status_code": status.HTTP_201_CREATED,
+            "message": "User registered successfully. OTP sent to your number.",
+            "data": new_user
+        }
 
     except Exception:
         db.rollback()
@@ -114,6 +119,36 @@ def resend_otp(req, db: Session):
         "success": True,
         "status_code": 201,
         "message": "OTP sent to your number"
+    }
+
+
+
+def get_user_details(current_user, db: Session):
+    user_id = int(current_user['id'])
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='User not found.'
+        )
+
+    return {
+        "success": True,
+        "status_code": status.HTTP_200_OK,
+        "data": {
+            "id": user.id,
+            "name": user.name,
+            "phone": user.phone,
+            "role": user.role.value,
+            "area": user.area,
+            "avenue": user.avenue,
+            "road": user.road,
+            "house": user.house,
+            "flat": user.flat,
+            "verified": user.verified,
+            "permissions": user.permissions
+        }
     }
 
 

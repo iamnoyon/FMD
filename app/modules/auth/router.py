@@ -12,7 +12,8 @@ from .service import (
     user_register,
     resend_otp,
     user_login,
-    otp_verify
+    otp_verify,
+    get_user_details
 )
 
 router = APIRouter(prefix='/auth', tags=["Auth"])
@@ -23,7 +24,8 @@ def register(req: RegisterSchema, db: Session = Depends(get_db)):
     return user_register(req, db)
 
 
-@router.post('/login', description='User login')
+# if user already registerd then login with otp
+@router.post('/login', description='After register otp verfied & login')
 def login(req: LoginSchema, res: Response, db: Session = Depends(get_db)):
 
     token = user_login(req, db)
@@ -43,6 +45,7 @@ def login(req: LoginSchema, res: Response, db: Session = Depends(get_db)):
     }
 
 
+# if already registerd then resnd otp to the user for again login then call login api
 @router.post('/resend-otp', description='OTP send to the registerd users')
 def resend(req: ResendOTP, db: Session = Depends(get_db)):
 
@@ -75,3 +78,9 @@ def logout(res: Response, current_user = Depends(get_current_user)):
         "status_code": status.HTTP_200_OK,
         "message": 'Logout done.'
     }
+
+
+@router.get('/me', description='Get current user details')
+def get_current_user_details(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+
+    return get_user_details(current_user, db)
