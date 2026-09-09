@@ -84,10 +84,9 @@ def user_register(req, db: Session):
         SMS_URL = os.getenv("SMS_API_URL")
         SMS_API_KEY = os.getenv("SMS_API_KEY")
         
-        sms_payload = get_sms_payload(req.phone, plan_otp)
         payload = {
             "api_key": SMS_API_KEY,
-            "msg": sms_payload.payload,
+            "msg": f"FreshMilk: Your verification code is {plan_otp}.",
             "to": req.phone,
         }
         
