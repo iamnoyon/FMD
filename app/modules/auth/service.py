@@ -13,7 +13,7 @@ from app.rabbitmq.sms_payload import get_sms_payload
 from app.rabbitmq.producer import publish_message
 
 
-async def user_register(req, db: Session):
+def user_register(req, db: Session):
     # Check if user already exists
     existing_user = (
         db.query(User)
@@ -68,12 +68,12 @@ async def user_register(req, db: Session):
         print("New OTP:", plan_otp)
 
         # SMS send through rabbitMQ
-        try:
-           sms_payload = get_sms_payload(req.phone, plan_otp)
-           await asyncio.to_thread(publish_message, sms_payload)
+        # try:
+        #    sms_payload = get_sms_payload(req.phone, plan_otp)
+        #    await asyncio.to_thread(publish_message, sms_payload)
 
-        except Exception as e:
-            print("Failed to publish OTP:", e)   
+        # except Exception as e:
+        #     print("Failed to publish OTP:", e)   
 
         return {
             "success": True,
