@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
@@ -8,9 +9,11 @@ from app.modules.otp.model import OTP
 from app.utils.permission import Permissions
 from app.utils.otp_service import create_otp_record, verify_otp
 from app.utils.token_service import create_token
+from app.rabbitmq.sms_payload import get_sms_payload
+from app.rabbitmq.producer import publish_message
 
 
-def user_register(req, db: Session):
+async def user_register(req, db: Session):
     # Check if user already exists
     existing_user = (
         db.query(User)
@@ -63,6 +66,14 @@ def user_register(req, db: Session):
 
         # For development only
         print("New OTP:", plan_otp)
+
+        # SMS send through rabbitMQ
+        try:
+           sms_payload = get_sms_payload(req.phone, plan_otp)
+           await asyncio.to_thread(publish_message, sms_payload)
+
+        except Exception as e:
+            print("Failed to publish OTP:", e)   
 
         return {
             "success": True,
