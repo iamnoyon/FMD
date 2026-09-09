@@ -54,11 +54,9 @@ def user_register(req, db: Session):
         # Mark all previous OTPs as verified
         db.query(OTP).filter(
             OTP.phone == req.phone,
-            OTP.verified == False
+            OTP.verified.is_(False)
         ).update(
-            {
-                "verified": True
-            },
+            {OTP.verified: True},
             synchronize_session=False
         )
 
