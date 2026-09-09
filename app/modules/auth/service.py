@@ -87,7 +87,7 @@ def user_register(req, db: Session):
         sms_payload = get_sms_payload(req.phone, plan_otp)
         payload = {
             "api_key": SMS_API_KEY,
-            "msg": sms_payload,
+            "msg": sms_payload.payload,
             "to": req.phone,
         }
         
