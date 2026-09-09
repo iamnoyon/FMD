@@ -1,8 +1,12 @@
+import os
 import asyncio
+import requests
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from dotenv import load_dotenv
+
 
 from app.modules.user.model import User, Role
 from app.modules.otp.model import OTP
@@ -11,6 +15,8 @@ from app.utils.otp_service import create_otp_record, verify_otp
 from app.utils.token_service import create_token
 from app.rabbitmq.sms_payload import get_sms_payload
 from app.rabbitmq.producer import publish_message
+
+load_dotenv()
 
 
 def user_register(req, db: Session):
@@ -74,6 +80,20 @@ def user_register(req, db: Session):
 
         # except Exception as e:
         #     print("Failed to publish OTP:", e)   
+
+        SMS_URL = os.getenv("SMS_API_URL")
+        SMS_API_KEY = os.getenv("SMS_API_KEY")
+        
+        sms_payload = get_sms_payload(req.phone, plan_otp)
+        payload = {
+            "api_key": SMS_API_KEY,
+            "msg": sms_payload,
+            "to": req.phone,
+        }
+        
+        response = requests.request("POST", SMS_URL, data=payload, timeout=10)
+        response.raise_for_status()
+        print("SMS sent successfully. Response:", response.text)
 
         return {
             "success": True,
