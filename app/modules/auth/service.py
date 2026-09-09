@@ -147,6 +147,7 @@ def resend_otp(req, db: Session):
     return {
         "success": True,
         "status_code": 201,
+        "OTP": plan_otp,
         "message": "OTP sent to your number"
     }
 
