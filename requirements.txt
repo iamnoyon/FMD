@@ -28,6 +28,7 @@ MarkupSafe==3.0.3
 mdurl==0.1.2
 psycopg==3.3.4
 psycopg-binary==3.3.4
+psycopg2-binary==2.9.12
 pwdlib==0.3.1
 pyasn1==0.6.4
 pycparser==3.0
@@ -54,6 +55,5 @@ typing-inspection==0.4.4
 typing_extensions==4.16.0
 tzdata==2026.3
 urllib3==2.7.0
-uvicorn==0.52.4
-watchfiles==1.2.0
-websockets==17.0.1
+uvicorn[standard]==0.52.0
+gunicorn==23.0.0
