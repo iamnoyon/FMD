@@ -79,18 +79,18 @@ def user_register(req, db: Session):
         # except Exception as e:
         #     print("Failed to publish OTP:", e)   
 
-        # SMS_URL = os.getenv("SMS_API_URL")
-        # SMS_API_KEY = os.getenv("SMS_API_KEY")
+        SMS_URL = os.getenv("SMS_API_URL")
+        SMS_API_KEY = os.getenv("SMS_API_KEY")
         
-        # payload = {
-        #     "api_key": SMS_API_KEY,
-        #     "msg": f"FreshMilk: Your verification code is {plan_otp}.",
-        #     "to": req.phone,
-        # }
+        payload = {
+            "api_key": SMS_API_KEY,
+            "msg": f"FreshMilk: Your verification code is {plan_otp}.",
+            "to": req.phone,
+        }
         
-        # response = requests.request("POST", SMS_URL, data=payload, timeout=20)
-        # response.raise_for_status()
-        # print("SMS sent successfully. Response:", response.text)
+        response = requests.request("POST", SMS_URL, data=payload)
+        response.raise_for_status()
+        print("SMS sent successfully. Response:", response.text)
 
         return {
             "success": True,
