@@ -3,6 +3,9 @@ from dotenv import load_dotenv
 from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
 from fastapi import Cookie, Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+security = HTTPBearer()
 
 load_dotenv()
 
@@ -35,14 +38,11 @@ def verify_token(token):
         )
 
 
-def get_current_user(
-        access_token: str | None = Cookie(default=None) 
-):
-    if not access_token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Unauthenticated!'
-        )
-
+def get_current_user( credentials: HTTPAuthorizationCredentials = Depends(security), ): 
+    access_token = credentials.credentials 
+    
+    if not access_token: 
+        raise HTTPException( status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthenticated!", ) 
+    
     return verify_token(access_token)
 
