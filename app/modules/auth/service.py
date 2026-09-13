@@ -182,6 +182,27 @@ def get_user_details(current_user, db: Session):
     }
 
 
+def login_for_admin(req, db):
+    user = db.query(User).filter(User.phone == req.phone).first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='User not found.'
+        )
+
+    is_super_admin = user.role == 'SUPERADMIN'
+
+    if not is_super_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Only super admin can login'
+        )
+    
+    token = create_token(user.id, user.phone, user.role, user.permissions)
+    return token
+
+
 
 ################################ Verify OTP ###################################
 def otp_verify(req, db: Session):

@@ -21,3 +21,7 @@ class ResendOTP(BaseModel):
 class VerifyOTP(BaseModel):
     phone: str = Field(default='01889010237')
     otp: str = Field(default='12345')
+
+
+class AdminLoginSchema(BaseModel):
+    phone: str = Field(default='01889010237')

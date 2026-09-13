@@ -6,14 +6,16 @@ from .schema import (
     RegisterSchema,
     ResendOTP,
     LoginSchema,
-    VerifyOTP
+    VerifyOTP,
+    AdminLoginSchema
 )
 from .service import (
     user_register,
     resend_otp,
     user_login,
     otp_verify,
-    get_user_details
+    get_user_details,
+    login_for_admin
 )
 
 router = APIRouter(prefix='/auth', tags=["Auth"])
@@ -84,3 +86,8 @@ def logout(res: Response, current_user = Depends(get_current_user)):
 def get_current_user_details(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
 
     return get_user_details(current_user, db)
+
+
+@router.post('/admin-login', description='Only admin can login')
+def admin_login(req:AdminLoginSchema, res: Response, db: Session = Depends(get_db) ):
+    return login_for_admin(req, db)
