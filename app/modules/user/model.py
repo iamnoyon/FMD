@@ -1,7 +1,7 @@
 from enum import Enum
 from app.core.db import Base
 from datetime import datetime
-from sqlalchemy import String, DateTime, ARRAY, String
+from sqlalchemy import String, DateTime, ARRAY
 from sqlalchemy.orm import Mapped, mapped_column
 
 class Role(str, Enum):

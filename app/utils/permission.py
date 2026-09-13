@@ -5,3 +5,8 @@ class Permissions(str, Enum):
     READ_USER = 'read_user'
     UPDATE_USER = 'update_user'
     DELETE_USER = 'delete_user'
+
+    CREATE_CATEGORY = 'create_category',
+    READ_CATEGORY = 'read_category',
+    UPDATE_CATEGORY = 'update_category',
+    DELETE_CATEGORY = 'delete_category',
