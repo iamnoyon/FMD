@@ -90,4 +90,18 @@ def get_current_user_details(current_user = Depends(get_current_user), db: Sessi
 
 @router.post('/admin-login', description='Only admin can login')
 def admin_login(req:AdminLoginSchema, res: Response, db: Session = Depends(get_db) ):
-    return login_for_admin(req, db)
+    token = login_for_admin(req, db)
+    res.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        secure=True,
+        samesite='lax',
+        max_age= 365 * 24 * 60 * 60,
+        path='/'
+    )
+    return {
+        "success": True,
+        "status_code": status.HTTP_200_OK,
+        "token": token
+    }

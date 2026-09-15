@@ -2,6 +2,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from .model import Product
 from .schema import CreateProduct, UpdateProduct
+from app.modules.categories.model import Categories
 
 
 def get_product_list(db: Session):
@@ -22,6 +23,7 @@ def create_new_product(req: CreateProduct, created_by: int, db: Session):
         new_product = Product(
             categoryId=req.categoryId,
             name=req.name,
+            description=req.description,
             weight=req.weight,
             weight_type=req.weight_type.value,
             quantity=req.quantity,
@@ -61,17 +63,55 @@ def get_product_by_id(id: int, db: Session):
     }
 
 
-def get_products_by_category(category_id: int, db: Session):
+def get_products_by_category(category_id: str, db: Session):
     try:
-        products = db.query(Product).filter(
-            Product.categoryId == category_id,
-            Product.status == True
-        ).all()
+        query = db.query(Product).filter(Product.status == True)
+
+        category_icon = None
+
+        if str(category_id).upper() != "ALL":
+            try:
+                cat_id = int(category_id)
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid category id. Use an integer or 'ALL'."
+                )
+            query = query.filter(Product.categoryId == cat_id)
+
+            cat = db.query(Categories.icon).filter(Categories.id == cat_id).first()
+            category_icon = cat.icon if cat else None
+
+        products = query.all()
+
+        data = []
+        for p in products:
+            data.append({
+                "id": p.id,
+                "categoryId": p.categoryId,
+                "name": p.name,
+                "description": p.description,
+                "weight": p.weight,
+                "weight_type": p.weight_type,
+                "quantity": p.quantity,
+                "price": p.price,
+                "image": p.image,
+                "status": p.status,
+                "createdAt": p.createdAt,
+                "createdBy": p.createdBy,
+                "updatedAt": p.updatedAt,
+                "updatedBy": p.updatedBy,
+            })
+
         return {
             "success": True,
             "message": "Products retrieved by category!",
-            "data": products
+            "data": data,
+            "total": len(data),
+            "categoryIcon": category_icon,
         }
+    except HTTPException:
+        raise
     except Exception:
         db.rollback()
         raise
@@ -91,6 +131,8 @@ def update_product(id: int, req: UpdateProduct, updated_by: int, db: Session):
             product.categoryId = req.categoryId
         if req.name is not None:
             product.name = req.name
+        if req.description is not None:
+            product.description = req.description
         if req.weight is not None:
             product.weight = req.weight
         if req.weight_type is not None:

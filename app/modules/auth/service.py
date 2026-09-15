@@ -183,7 +183,7 @@ def get_user_details(current_user, db: Session):
 
 
 def login_for_admin(req, db):
-    user = db.query(User).filter(User.phone == req.phone).first()
+    user = db.query(User).filter(User.phone == req.email).first()
     
     if not user:
         raise HTTPException(
@@ -191,7 +191,7 @@ def login_for_admin(req, db):
             detail='User not found.'
         )
 
-    is_super_admin = user.role == 'SUPERADMIN'
+    is_super_admin = user.role == Role.SUPERADMIN
 
     if not is_super_admin:
         raise HTTPException(

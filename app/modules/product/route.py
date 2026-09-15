@@ -32,7 +32,7 @@ def product_by_id(id: int, current_user=Depends(get_current_user), db: Session =
 
 
 @router.get("/category/{category_id}")
-def products_by_category(category_id: int, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+def products_by_category(category_id: str, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     return get_products_by_category(category_id, db)
 
 

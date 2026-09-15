@@ -24,4 +24,4 @@ class VerifyOTP(BaseModel):
 
 
 class AdminLoginSchema(BaseModel):
-    phone: str = Field(default='01889010237')
+    email: str = Field(default='01889010237')

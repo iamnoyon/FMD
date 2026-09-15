@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.core.db import Base, engine
+from app.core.db import Base, engine, auto_sync_schema
 from app.core.seed import seed_superadmin
 
 # import routers
@@ -13,6 +13,7 @@ Base.metadata.create_all(bind=engine)
 
 @app.on_event("startup")
 def on_startup():
+    auto_sync_schema()
     seed_superadmin()
 
 # connect all routes here
