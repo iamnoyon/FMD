@@ -5,7 +5,7 @@ from sqlalchemy import (
     String, Boolean, DateTime, Float, Integer, ForeignKey, Text
 )
 
-DB_URL = 'postgresql://postgres:674@localhost:5432/freshmart'
+DB_URL = 'postgresql://neondb_owner:npg_aqNj3ZfOKkB7@ep-rapid-queen-aecqqwut-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
 
 engine = create_engine(
     DB_URL,
