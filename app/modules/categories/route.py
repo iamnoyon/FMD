@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends
+from typing import Optional
+from fastapi import APIRouter, Depends, Query
 from app.core.db import get_db
 from sqlalchemy.orm import Session
 from app.utils.token_service import get_current_user
@@ -15,8 +16,13 @@ from .service import (
 router = APIRouter(prefix='/categories', tags=['Categories'])
 
 @router.get('/list')
-def category_list(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
-    return get_category_list(db)
+def category_list(
+    page: Optional[int] = Query(None, ge=1),
+    limit: Optional[int] = Query(None, ge=1),
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return get_category_list(db, page=page, limit=limit)
 
 
 @router.post('/create')

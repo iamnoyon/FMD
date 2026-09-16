@@ -5,9 +5,27 @@ from .schema import CreateProduct, UpdateProduct
 from app.modules.categories.model import Categories
 
 
-def get_product_list(db: Session):
+def get_product_list(db: Session, page: int = None, limit: int = None):
     try:
-        products = db.query(Product).filter(Product.status == True).all()
+        query = db.query(Product).filter(Product.status == True)
+
+        if page is not None and limit is not None:
+            total = query.count()
+            offset = (page - 1) * limit
+            products = query.offset(offset).limit(limit).all()
+            return {
+                "success": True,
+                "message": "Products retrieved successfully!",
+                "data": products,
+                "pagination": {
+                    "page": page,
+                    "limit": limit,
+                    "total": total,
+                    "total_pages": (total + limit - 1) // limit
+                }
+            }
+
+        products = query.all()
         return {
             "success": True,
             "message": "Products retrieved successfully!",

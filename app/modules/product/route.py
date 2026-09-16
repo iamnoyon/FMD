@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends
+from typing import Optional
+from fastapi import APIRouter, Depends, Query
 from app.core.db import get_db
 from sqlalchemy.orm import Session
 from app.utils.token_service import get_current_user
@@ -17,8 +18,13 @@ router = APIRouter(prefix="/products", tags=["Products"])
 
 
 @router.get("/list")
-def product_list(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
-    return get_product_list(db)
+def product_list(
+    page: Optional[int] = Query(None, ge=1),
+    limit: Optional[int] = Query(None, ge=1),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return get_product_list(db, page=page, limit=limit)
 
 
 @router.post("/create")

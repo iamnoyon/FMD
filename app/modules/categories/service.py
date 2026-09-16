@@ -2,9 +2,27 @@ from fastapi import HTTPException,status
 from sqlalchemy.orm import Session
 from .model import Categories
 
-def get_category_list(db: Session):
+def get_category_list(db: Session, page: int = None, limit: int = None):
     try:
-        categories = db.query(Categories).filter(Categories.status == True).all()
+        query = db.query(Categories).filter(Categories.status == True)
+
+        if page is not None and limit is not None:
+            total = query.count()
+            offset = (page - 1) * limit
+            categories = query.offset(offset).limit(limit).all()
+            return {
+                "success": True,
+                "message": "Categories are retrived successfully!",
+                "data": categories,
+                "pagination": {
+                    "page": page,
+                    "limit": limit,
+                    "total": total,
+                    "total_pages": (total + limit - 1) // limit
+                }
+            }
+
+        categories = query.all()
         return {
             "success": True,
             "message": "Categories are retrived successfully!",
