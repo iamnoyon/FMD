@@ -151,15 +151,29 @@ def create_new_order(req: CreateOrder, created_by: int, db: Session):
 
 
 def get_order_by_id(id: int, db: Session):
-    order = db.query(Order).filter(Order.id == id).first()
+    result = (
+        db.query(Order, User)
+        .outerjoin(User, Order.deliveryman_id == User.id)
+        .filter(Order.id == id)
+        .first()
+    )
 
-    if not order:
+    if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Order not found"
         )
 
+    order, deliveryman_user = result
     items = db.query(OrderItem).filter(OrderItem.order_id == order.id).all()
+
+    deliveryman = None
+    if deliveryman_user is not None:
+        deliveryman = {
+            "id": deliveryman_user.id,
+            "name": deliveryman_user.name,
+            "phone": deliveryman_user.phone,
+        }
 
     return {
         "success": True,
@@ -174,6 +188,7 @@ def get_order_by_id(id: int, db: Session):
             "coupon_value": order.coupon_value,
             "applied_coupon": order.applied_coupon,
             "deliveryman_id": order.deliveryman_id,
+            "deliveryman": deliveryman,
             "status": order.status,
             "items": items,
             "createdAt": order.createdAt,
