@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from typing import Optional
 from app.core.db import get_db
 from sqlalchemy.orm import Session
 from app.utils.token_service import get_current_user
@@ -11,6 +12,7 @@ from .service import (
     update_order,
     delete_order,
     assign_orders_bulk,
+    get_orders_by_user,
 )
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
@@ -38,6 +40,28 @@ def store_order(req: CreateOrder, current_user=Depends(get_current_user), db: Se
 def assign_bulk(req: AssignBulkOrders, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     _require_admin(current_user)
     return assign_orders_bulk(req.deliveryman_id, req.order_ids, current_user["id"], db)
+
+
+@router.get("/my")
+def my_orders(
+    page: Optional[int] = Query(None, ge=1),
+    limit: Optional[int] = Query(None, ge=1, le=100),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return get_orders_by_user(current_user["id"], db, page, limit)
+
+
+@router.get("/by-user/{user_id}")
+def orders_by_user(
+    user_id: int,
+    page: Optional[int] = Query(None, ge=1),
+    limit: Optional[int] = Query(None, ge=1, le=100),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _require_admin(current_user)
+    return get_orders_by_user(user_id, db, page, limit)
 
 
 @router.get("/{id}")

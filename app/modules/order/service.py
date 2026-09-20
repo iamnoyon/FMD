@@ -43,6 +43,36 @@ def get_order_list(db: Session):
         raise
 
 
+def get_orders_by_user(user_id: int, db: Session, page: int = None, limit: int = None):
+    query = (
+        db.query(Order)
+        .filter(Order.user_id == user_id)
+        .order_by(Order.createdAt.desc())
+    )
+
+    if page is not None and limit is not None:
+        total = query.count()
+        offset = (page - 1) * limit
+        items = query.offset(offset).limit(limit).all()
+        return {
+            "success": True,
+            "message": "Orders retrieved successfully!",
+            "data": items,
+            "pagination": {
+                "page": page,
+                "limit": limit,
+                "total": total,
+                "total_pages": (total + limit - 1) // limit,
+            },
+        }
+
+    return {
+        "success": True,
+        "message": "Orders retrieved successfully!",
+        "data": query.all(),
+    }
+
+
 def create_new_order(req: CreateOrder, created_by: int, db: Session):
     try:
         items = []
