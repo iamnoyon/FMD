@@ -13,7 +13,7 @@ class Order(Base):
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'), nullable=False)
     subtotal: Mapped[float] = mapped_column(Float, nullable=False)
     delivery_fee: Mapped[float] = mapped_column(Float, nullable=False, default=0)
-    discount_price: Mapped[float] = mapped_column(Float, nullable=False, default=0)
+    coupon_value: Mapped[float] = mapped_column(Float, nullable=False, default=0)
     total_price: Mapped[float] = mapped_column(Float, nullable=False)
     applied_coupon: Mapped[str] = mapped_column(String(50), nullable=True)
     payment_method: Mapped[str] = mapped_column(String(20), nullable=False)

@@ -78,6 +78,10 @@ def auto_sync_schema():
 
                 existing_cols = {c["name"]: c for c in inspector.get_columns(table_name)}
 
+                _rename_columns(conn, table_name, existing_cols)
+
+                existing_cols = {c["name"]: c for c in inspector.get_columns(table_name)}
+
                 for col in table.columns:
                     if col.name in existing_cols:
                         continue
@@ -88,3 +92,19 @@ def auto_sync_schema():
                     print(f"[auto-sync] ALTER TABLE {table_name} ADD COLUMN {col.name} {ddl}")
     except Exception as e:
         print(f"[auto-sync] skipped: {e}")
+
+
+COLUMN_RENAMES = {
+    "orders": {
+        "discount_price": "coupon_value",
+    },
+}
+
+
+def _rename_columns(conn, table_name: str, existing_cols: dict):
+    renames = COLUMN_RENAMES.get(table_name, {})
+    for old_name, new_name in renames.items():
+        if old_name in existing_cols and new_name not in existing_cols:
+            sql = f'ALTER TABLE "{table_name}" RENAME COLUMN "{old_name}" TO "{new_name}"'
+            conn.execute(text(sql))
+            print(f"[auto-sync] RENAME {table_name}.{old_name} -> {new_name}")
