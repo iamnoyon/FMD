@@ -24,6 +24,7 @@ class OrderProductItem(BaseModel):
 class CreateOrder(BaseModel):
     products: List[OrderProductItem]
     coupon_code: Optional[str] = Field(default=None, max_length=50)
+    delivery_fee: float = Field(ge=0)
     payment_method: PaymentMethod
 
 

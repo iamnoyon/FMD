@@ -46,7 +46,7 @@ def get_order_list(db: Session):
 def create_new_order(req: CreateOrder, created_by: int, db: Session):
     try:
         items = []
-        total = 0
+        subtotal = 0
 
         for item in req.products:
             product = db.query(Product).filter(Product.id == item.id).first()
@@ -63,8 +63,8 @@ def create_new_order(req: CreateOrder, created_by: int, db: Session):
                     detail=f"Insufficient stock for product '{product.name}'"
                 )
 
-            subtotal = product.price * item.quantity
-            total += subtotal
+            line_total = product.price * item.quantity
+            subtotal += line_total
 
             items.append({
                 "product": product,
@@ -99,11 +99,11 @@ def create_new_order(req: CreateOrder, created_by: int, db: Session):
                     detail="Coupon usage limit reached"
                 )
 
-            discount = min(coupon.discount_amount, total)
+            discount = min(coupon.discount_amount, subtotal)
             coupon.used_count += 1
             coupon_code = coupon.code
 
-        final_price = total - discount
+        final_price = subtotal + req.delivery_fee - discount
         order_number = generate_order_number()
 
         while db.query(Order).filter(Order.order_number == order_number).first():
@@ -112,6 +112,8 @@ def create_new_order(req: CreateOrder, created_by: int, db: Session):
         new_order = Order(
             order_number=order_number,
             user_id=created_by,
+            subtotal=subtotal,
+            delivery_fee=req.delivery_fee,
             total_price=final_price,
             discount_price=discount,
             applied_coupon=coupon_code,
@@ -166,6 +168,8 @@ def get_order_by_id(id: int, db: Session):
             "id": order.id,
             "order_number": order.order_number,
             "user_id": order.user_id,
+            "subtotal": order.subtotal,
+            "delivery_fee": order.delivery_fee,
             "total_price": order.total_price,
             "discount_price": order.discount_price,
             "applied_coupon": order.applied_coupon,
