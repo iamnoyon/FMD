@@ -1,8 +1,9 @@
 from app.core.db import Base
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import String, DateTime, Float, Integer, ForeignKey
+from sqlalchemy import String, DateTime, Float, Integer, ForeignKey, Enum
 from sqlalchemy.orm import Mapped, mapped_column
+from .schema import OrderStatus
 
 
 class Order(Base):
@@ -18,7 +19,11 @@ class Order(Base):
     applied_coupon: Mapped[str] = mapped_column(String(50), nullable=True)
     payment_method: Mapped[str] = mapped_column(String(20), nullable=False)
     deliveryman_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey('users.id'), nullable=True)
-    status: Mapped[str] = mapped_column(String(20), nullable=False, default='pending')
+    status: Mapped[OrderStatus] = mapped_column(
+        Enum(OrderStatus, native_enum=False, length=20),
+        nullable=False,
+        default=OrderStatus.pending,
+    )
 
     createdAt: Mapped[datetime] = mapped_column(DateTime, nullable=True, default=datetime.utcnow)
     createdBy: Mapped[int] = mapped_column(nullable=True)

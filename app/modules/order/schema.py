@@ -7,6 +7,7 @@ class OrderStatus(str, Enum):
     pending = "pending"
     confirmed = "confirmed"
     delivered = "delivered"
+    canceled = "canceled"
 
 
 class PaymentMethod(str, Enum):

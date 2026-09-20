@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 import random
 import string
 from .model import Order, OrderItem
-from .schema import CreateOrder, UpdateOrder
+from .schema import CreateOrder, UpdateOrder, OrderStatus
 from app.modules.product.model import Product
 from app.modules.coupon.model import Coupon
 from app.modules.user.model import User, Role
@@ -238,7 +238,7 @@ def update_order(id: int, req: UpdateOrder, updated_by: int, db: Session):
 
     try:
         if req.status is not None:
-            order.status = req.status.value
+            order.status = req.status
 
         order.updatedBy = updated_by
 
@@ -296,8 +296,8 @@ def assign_orders_bulk(deliveryman_id: int, order_ids: list, updated_by: int, db
     try:
         for order in orders:
             order.deliveryman_id = deliveryman_id
-            if order.status == 'pending':
-                order.status = 'confirmed'
+            if order.status == OrderStatus.pending:
+                order.status = OrderStatus.confirmed
             order.updatedBy = updated_by
 
         db.commit()

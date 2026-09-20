@@ -90,8 +90,48 @@ def auto_sync_schema():
                     sql = f'ALTER TABLE "{table_name}" ADD COLUMN IF NOT EXISTS "{col.name}" {ddl}'
                     conn.execute(text(sql))
                     print(f"[auto-sync] ALTER TABLE {table_name} ADD COLUMN {col.name} {ddl}")
+
+            _add_enum_check_constraints(conn, inspector)
     except Exception as e:
         print(f"[auto-sync] skipped: {e}")
+
+
+def _add_enum_check_constraints(conn, inspector):
+    for table in Base.metadata.sorted_tables:
+        table_name = table.name
+        if not inspector.has_table(table_name):
+            continue
+
+        for col in table.columns:
+            col_type = col.type
+            if not (isinstance(col_type, Enum) and not col_type.native_enum):
+                continue
+
+            enum_class = getattr(col_type, "enum_class", None)
+            if enum_class is None:
+                continue
+
+            values = [m.value for m in enum_class]
+            values_list = ", ".join(f"'{v}'" for v in values)
+            constraint_name = f"{table_name}_{col.name}_check"
+
+            exists = conn.execute(
+                text(
+                    "SELECT 1 FROM information_schema.table_constraints "
+                    "WHERE table_name = :table_name AND constraint_name = :constraint_name"
+                ),
+                {"table_name": table_name, "constraint_name": constraint_name},
+            ).first()
+
+            if exists:
+                continue
+
+            sql = (
+                f'ALTER TABLE "{table_name}" ADD CONSTRAINT "{constraint_name}" '
+                f'CHECK ("{col.name}" IN ({values_list}))'
+            )
+            conn.execute(text(sql))
+            print(f"[auto-sync] ADD CONSTRAINT {constraint_name} CHECK ({col.name} IN ({values_list}))")
 
 
 COLUMN_RENAMES = {
