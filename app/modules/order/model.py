@@ -1,5 +1,6 @@
 from app.core.db import Base
 from datetime import datetime
+from typing import Optional
 from sqlalchemy import String, DateTime, Float, Integer, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -11,8 +12,10 @@ class Order(Base):
     order_number: Mapped[str] = mapped_column(String(20), nullable=False, unique=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'), nullable=False)
     total_price: Mapped[float] = mapped_column(Float, nullable=False)
+    discount_price: Mapped[float] = mapped_column(Float, nullable=False, default=0)
     applied_coupon: Mapped[str] = mapped_column(String(50), nullable=True)
     payment_method: Mapped[str] = mapped_column(String(20), nullable=False)
+    deliveryman_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey('users.id'), nullable=True)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default='pending')
 
     createdAt: Mapped[datetime] = mapped_column(DateTime, nullable=True, default=datetime.utcnow)

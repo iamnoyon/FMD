@@ -29,3 +29,8 @@ class CreateOrder(BaseModel):
 
 class UpdateOrder(BaseModel):
     status: Optional[OrderStatus] = None
+
+
+class AssignBulkOrders(BaseModel):
+    deliveryman_id: int
+    order_ids: List[int] = Field(min_length=1)

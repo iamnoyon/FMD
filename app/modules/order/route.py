@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from app.core.db import get_db
 from sqlalchemy.orm import Session
 from app.utils.token_service import get_current_user
-from .schema import CreateOrder, UpdateOrder
+from .schema import CreateOrder, UpdateOrder, AssignBulkOrders
 
 from .service import (
     get_order_list,
@@ -10,9 +10,18 @@ from .service import (
     get_order_by_id,
     update_order,
     delete_order,
+    assign_orders_bulk,
 )
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
+
+
+def _require_admin(current_user: dict):
+    if current_user.get("role") not in ("admin", "superadmin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required"
+        )
 
 
 @router.get("/list")
@@ -23,6 +32,12 @@ def order_list(current_user=Depends(get_current_user), db: Session = Depends(get
 @router.post("/create")
 def store_order(req: CreateOrder, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     return create_new_order(req, current_user["id"], db)
+
+
+@router.post("/assign-bulk")
+def assign_bulk(req: AssignBulkOrders, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    _require_admin(current_user)
+    return assign_orders_bulk(req.deliveryman_id, req.order_ids, current_user["id"], db)
 
 
 @router.get("/{id}")

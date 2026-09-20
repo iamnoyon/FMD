@@ -6,12 +6,28 @@ from .model import Order, OrderItem
 from .schema import CreateOrder, UpdateOrder
 from app.modules.product.model import Product
 from app.modules.coupon.model import Coupon
+from app.modules.user.model import User, Role
 from datetime import datetime
 
 
 def generate_order_number():
     suffix = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
     return f"ORD-{suffix}"
+
+
+def _validate_deliveryman(deliveryman_id: int, db: Session):
+    user = db.query(User).filter(User.id == deliveryman_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with id {deliveryman_id} not found"
+        )
+    if user.role != Role.DELIVERYMAN:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"User with id {deliveryman_id} is not a deliveryman"
+        )
+    return user
 
 
 def get_order_list(db: Session):
@@ -97,6 +113,7 @@ def create_new_order(req: CreateOrder, created_by: int, db: Session):
             order_number=order_number,
             user_id=created_by,
             total_price=final_price,
+            discount_price=discount,
             applied_coupon=coupon_code,
             payment_method=req.payment_method.value,
             createdBy=created_by,
@@ -150,7 +167,9 @@ def get_order_by_id(id: int, db: Session):
             "order_number": order.order_number,
             "user_id": order.user_id,
             "total_price": order.total_price,
+            "discount_price": order.discount_price,
             "applied_coupon": order.applied_coupon,
+            "deliveryman_id": order.deliveryman_id,
             "status": order.status,
             "items": items,
             "createdAt": order.createdAt,
@@ -209,4 +228,40 @@ def delete_order(id: int, db: Session):
     return {
         "success": True,
         "message": "Order deleted successfully!",
+    }
+
+
+def assign_orders_bulk(deliveryman_id: int, order_ids: list, updated_by: int, db: Session):
+    _validate_deliveryman(deliveryman_id, db)
+
+    orders = db.query(Order).filter(Order.id.in_(order_ids)).all()
+    found_ids = {o.id for o in orders}
+    missing_ids = [oid for oid in order_ids if oid not in found_ids]
+
+    if missing_ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Orders not found: {missing_ids}"
+        )
+
+    try:
+        for order in orders:
+            order.deliveryman_id = deliveryman_id
+            if order.status == 'pending':
+                order.status = 'confirmed'
+            order.updatedBy = updated_by
+
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+
+    return {
+        "success": True,
+        "message": f"Assigned {len(orders)} orders to deliveryman {deliveryman_id}",
+        "data": {
+            "deliveryman_id": deliveryman_id,
+            "assigned_count": len(orders),
+            "order_ids": list(found_ids),
+        }
     }
