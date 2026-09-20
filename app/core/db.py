@@ -71,6 +71,8 @@ def auto_sync_schema():
     try:
         inspector = inspect(engine)
         with engine.begin() as conn:
+            _clean_enum_data(conn, inspector)
+
             for table in Base.metadata.sorted_tables:
                 table_name = table.name
                 if not inspector.has_table(table_name):
@@ -94,6 +96,27 @@ def auto_sync_schema():
             _add_enum_check_constraints(conn, inspector)
     except Exception as e:
         print(f"[auto-sync] skipped: {e}")
+
+
+def _clean_enum_data(conn, inspector):
+    for table in Base.metadata.sorted_tables:
+        table_name = table.name
+        if not inspector.has_table(table_name):
+            continue
+
+        for col in table.columns:
+            col_type = col.type
+            if not (isinstance(col_type, Enum) and not col_type.native_enum):
+                continue
+
+            quoted = f'"{col.name}"'
+            sql = (
+                f'UPDATE "{table_name}" SET {quoted} = TRIM({quoted}) '
+                f'WHERE {quoted} IS NOT NULL AND {quoted} <> TRIM({quoted})'
+            )
+            result = conn.execute(text(sql))
+            if result.rowcount:
+                print(f"[auto-sync] trimmed {result.rowcount} rows in {table_name}.{col.name}")
 
 
 def _add_enum_check_constraints(conn, inspector):
