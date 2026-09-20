@@ -9,6 +9,11 @@ from .register_routes import register_all_routes
 # create fastapi app
 app = FastAPI()
 
+
+@app.get("/")
+def home():
+    return {"message": "Welcome to MilkMart Application"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
