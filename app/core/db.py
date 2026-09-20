@@ -1,4 +1,5 @@
 from sqlalchemy import create_engine, inspect, text
+from enum import Enum
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 import os
 from sqlalchemy import (
