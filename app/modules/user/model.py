@@ -31,6 +31,8 @@ class User(Base):
     verified: Mapped[bool] = mapped_column(nullable=False, default=False)
     permissions: Mapped[list[str]] = mapped_column(ARRAY(String), nullable=False, default=list)
 
+    profile_image: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
     createdAt: Mapped[datetime] = mapped_column(DateTime, nullable=True, default=datetime.utcnow)
     createdBy: Mapped[str] = mapped_column(nullable=False, default='system')
 

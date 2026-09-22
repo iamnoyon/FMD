@@ -15,7 +15,8 @@ from .service import (
     user_login,
     otp_verify,
     get_user_details,
-    login_for_admin
+    login_for_admin,
+    update_profile_image
 )
 
 router = APIRouter(prefix='/auth', tags=["Auth"])
@@ -105,3 +106,12 @@ def admin_login(req:AdminLoginSchema, res: Response, db: Session = Depends(get_d
         "status_code": status.HTTP_200_OK,
         "token": token
     }
+
+
+@router.patch('/me/profile-image', description='Update the current user profile image')
+def update_my_profile_image(
+    profile_image: str,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return update_profile_image(current_user, profile_image, db)

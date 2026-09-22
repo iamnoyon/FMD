@@ -177,7 +177,34 @@ def get_user_details(current_user, db: Session):
             "house": user.house,
             "flat": user.flat,
             "verified": user.verified,
-            "permissions": user.permissions
+            "permissions": user.permissions,
+            "profile_image": user.profile_image
+        }
+    }
+
+
+def update_profile_image(current_user, profile_image: str, db: Session):
+    user_id = int(current_user['id'])
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='User not found.'
+        )
+
+    user.profile_image = profile_image
+    user.updatedBy = current_user.get('phone', 'self')
+    user.updatedAt = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "success": True,
+        "status_code": status.HTTP_200_OK,
+        "message": "Profile image updated successfully.",
+        "data": {
+            "profile_image": user.profile_image
         }
     }
 
