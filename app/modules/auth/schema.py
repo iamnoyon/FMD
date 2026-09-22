@@ -1,5 +1,8 @@
 from pydantic import BaseModel, Field
 
+class UpdateProfileImage(BaseModel):
+    profile_image: str = Field(..., min_length=1)
+
 class RegisterSchema(BaseModel):
     name: str = Field(default='Mr. John', max_length=20)
     phone: str = Field(default='01889010237', max_length=11, min_length=11)

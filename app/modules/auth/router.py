@@ -7,7 +7,8 @@ from .schema import (
     ResendOTP,
     LoginSchema,
     VerifyOTP,
-    AdminLoginSchema
+    AdminLoginSchema,
+    UpdateProfileImage
 )
 from .service import (
     user_register,
@@ -110,8 +111,8 @@ def admin_login(req:AdminLoginSchema, res: Response, db: Session = Depends(get_d
 
 @router.patch('/me/profile-image', description='Update the current user profile image')
 def update_my_profile_image(
-    profile_image: str,
+    req: UpdateProfileImage,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return update_profile_image(current_user, profile_image, db)
+    return update_profile_image(current_user, req.profile_image, db)
