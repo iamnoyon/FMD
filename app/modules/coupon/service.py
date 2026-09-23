@@ -26,6 +26,7 @@ def create_new_coupon(req: CreateCoupon, created_by: int, db: Session):
             discount_amount=req.discount_amount,
             expire_at=req.expire_at,
             max_usage=req.max_usage,
+            status=req.status if req.status is not None else True,
             createdBy=created_by,
         )
 

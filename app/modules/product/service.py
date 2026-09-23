@@ -47,6 +47,7 @@ def create_new_product(req: CreateProduct, created_by: int, db: Session):
             quantity=req.quantity,
             price=req.price,
             image=req.image,
+            status=req.status if req.status is not None else True,
             createdBy=created_by,
         )
 

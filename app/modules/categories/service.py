@@ -40,7 +40,8 @@ def create_new_category(req, db: Session):
         new_category = Categories(
             name = req.name,
             image = req.image,
-            icon = req.icon
+            icon = req.icon,
+            status = req.status if req.status is not None else True
         )
 
         db.add(new_category)
@@ -85,9 +86,14 @@ def update_category_by_id(id, req, db: Session):
             detail= 'Category not found'
         )
 
-    category.name = req.name
-    category.image = req.image
-    category.icon = req.icon
+    if req.name is not None:
+        category.name = req.name
+    if req.image is not None:
+        category.image = req.image
+    if req.icon is not None:
+        category.icon = req.icon
+    if req.status is not None:
+        category.status = req.status
 
     db.commit()
     db.refresh(category)

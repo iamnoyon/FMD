@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query
 from app.core.db import get_db
 from sqlalchemy.orm import Session
 from app.utils.token_service import get_current_user
-from .schema import CreateCategory
+from .schema import CreateCategory, UpdateCategory
 
 from .service import (
     get_category_list,
@@ -35,7 +35,7 @@ def category_by_id(id, current_user = Depends(get_current_user), db: Session = D
     return get_category_by_id(id, db);
 
 @router.put('/{id}')
-def update_category(id, req: CreateCategory, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+def update_category(id, req: UpdateCategory, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     return update_category_by_id(id, req, db);
 
 

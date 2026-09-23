@@ -8,6 +8,7 @@ class CreateCoupon(BaseModel):
     discount_amount: float = Field(gt=0)
     expire_at: datetime
     max_usage: int = Field(gt=0)
+    status: Optional[bool] = True
 
 
 class UpdateCoupon(BaseModel):

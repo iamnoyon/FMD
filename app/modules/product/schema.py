@@ -19,6 +19,7 @@ class CreateProduct(BaseModel):
     quantity: int = Field(default=0, ge=0)
     price: float = Field(gt=0)
     image: Optional[str] = None
+    status: Optional[bool] = True
 
 
 class UpdateProduct(BaseModel):
