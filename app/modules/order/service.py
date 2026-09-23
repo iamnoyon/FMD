@@ -195,7 +195,23 @@ def get_order_by_id(id: int, db: Session):
         )
 
     order, deliveryman_user = result
-    items = db.query(OrderItem).filter(OrderItem.order_id == order.id).all()
+    items_rows = (
+        db.query(OrderItem, Product)
+        .join(Product, OrderItem.product_id == Product.id)
+        .filter(OrderItem.order_id == order.id)
+        .all()
+    )
+
+    items = [
+        {
+            "id": item.id,
+            "product_id": item.product_id,
+            "product_name": product.name,
+            "quantity": item.quantity,
+            "price": item.price,
+        }
+        for item, product in items_rows
+    ]
 
     deliveryman = None
     if deliveryman_user is not None:
