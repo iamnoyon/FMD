@@ -30,13 +30,88 @@ def _validate_deliveryman(deliveryman_id: int, db: Session):
     return user
 
 
-def get_order_list(db: Session):
+def _serialize_order_with_user(order: Order, user: User | None):
+    if user is None:
+        user_info = None
+    else:
+        user_info = {
+            "id": user.id,
+            "name": user.name,
+            "phone": user.phone,
+            "location": {
+                "area": user.area.value if hasattr(user.area, "value") else user.area,
+                "avenue": user.avenue,
+                "road": user.road,
+                "house": user.house,
+                "flat": user.flat,
+            },
+        }
+
+    return {
+        "id": order.id,
+        "order_number": order.order_number,
+        "user_id": order.user_id,
+        "user": user_info,
+        "subtotal": order.subtotal,
+        "delivery_fee": order.delivery_fee,
+        "coupon_value": order.coupon_value,
+        "total_price": order.total_price,
+        "applied_coupon": order.applied_coupon,
+        "payment_method": order.payment_method,
+        "deliveryman_id": order.deliveryman_id,
+        "status": order.status.value if hasattr(order.status, "value") else order.status,
+        "createdAt": order.createdAt,
+        "updatedAt": order.updatedAt,
+    }
+
+
+def get_order_list(
+    db: Session,
+    page: int | None = None,
+    limit: int | None = None,
+    status_filter: OrderStatus | None = None,
+    area: str | None = None,
+    avenue: str | None = None,
+):
     try:
-        orders = db.query(Order).all()
+        query = (
+            db.query(Order, User)
+            .outerjoin(User, Order.user_id == User.id)
+            .order_by(Order.createdAt.desc())
+        )
+
+        if status_filter is not None:
+            query = query.filter(Order.status == status_filter)
+
+        if area:
+            query = query.filter(User.area == area)
+
+        if avenue:
+            query = query.filter(User.avenue == avenue)
+
+        if page is not None and limit is not None:
+            total = query.count()
+            offset = (page - 1) * limit
+            rows = query.offset(offset).limit(limit).all()
+            data = [_serialize_order_with_user(order, user) for order, user in rows]
+            return {
+                "success": True,
+                "message": "Orders retrieved successfully!",
+                "data": data,
+                "pagination": {
+                    "page": page,
+                    "limit": limit,
+                    "total": total,
+                    "total_pages": (total + limit - 1) // limit if limit else 0,
+                },
+            }
+
+        rows = query.all()
+        data = [_serialize_order_with_user(order, user) for order, user in rows]
         return {
             "success": True,
             "message": "Orders retrieved successfully!",
-            "data": orders
+            "data": data,
         }
     except Exception:
         db.rollback()
