@@ -7,6 +7,7 @@ from app.modules.upload.route import router as upload_router
 from app.modules.product.route import router as product_router
 from app.modules.coupon.route import router as coupon_router
 from app.modules.order.route import router as order_router
+from app.modules.user.route import router as user_router
 
 # create main route
 register_all_routes = APIRouter()
@@ -18,4 +19,5 @@ register_all_routes.include_router(product_router)
 register_all_routes.include_router(upload_router)
 register_all_routes.include_router(coupon_router)
 register_all_routes.include_router(order_router)
+register_all_routes.include_router(user_router)
 
