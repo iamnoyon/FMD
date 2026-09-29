@@ -19,7 +19,7 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(autoincrement=True, index=True, primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    phone: Mapped[str] = mapped_column(nullable=False)
+    phone: Mapped[str] = mapped_column(nullable=False, index=True)
     role: Mapped[Role] = mapped_column(nullable=False, default=Role.CUSTOMER)
 
     area: Mapped[AreaEnum] = mapped_column(nullable=False, default=AreaEnum.MIRPURDOSH)

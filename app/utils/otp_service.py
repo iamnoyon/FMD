@@ -2,7 +2,6 @@ import os
 import secrets
 from dotenv import load_dotenv
 from sqlalchemy import update
-from app.core.db import localSession
 from datetime import datetime, timezone, timedelta
 
 from app.modules.otp.model import OTP
@@ -30,17 +29,14 @@ def verify_otp(otp, hash_otp) -> bool:
     return pwd_context.verify(otp, hash_otp)
 
 
-def create_otp_record(phone):
-    db = localSession()
-
+def create_otp_record(phone, db):
     db.execute(
         update(OTP)
         .where(OTP.phone == phone, OTP.verified == False)
         .values(verified=True)
+        .execution_options(synchronize_session=False)
     )
 
-    db.commit()
-    
     plan_otp = generate_otp()
     hashed_otp = hash_otp(plan_otp)
     expire_time = get_otp_expire_time()

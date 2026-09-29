@@ -1,8 +1,13 @@
 import json
-from .producer import EXCHANGE_NAME
-from .connection import get_connection
+import logging
 
-def start_consuming(queue_name, callback):
+from .connection import get_connection
+from .producer import EXCHANGE_NAME, SMS_QUEUE
+
+logger = logging.getLogger(__name__)
+
+
+def start_consuming(queue_name=SMS_QUEUE, callback=None):
     connection = get_connection()
     channel = connection.channel()
 
@@ -22,10 +27,17 @@ def start_consuming(queue_name, callback):
         queue=queue_name,
     )
 
+    channel.basic_qos(prefetch_count=10)
+
     def on_message(ch, method, properties, body):
-        data = json.loads(body)
-        callback(data)
-        ch.basic_ack(delivery_tag=method.delivery_tag)
+        try:
+            data = json.loads(body)
+            callback(data)
+        except Exception:
+            logger.exception("Failed processing message from %s", queue_name)
+            ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+        else:
+            ch.basic_ack(delivery_tag=method.delivery_tag)
 
     channel.basic_consume(
         queue=queue_name,

@@ -1,5 +1,4 @@
 import os
-import asyncio
 import requests
 from datetime import datetime, timezone
 
@@ -14,12 +13,12 @@ from app.utils.permission import Permissions
 from app.utils.otp_service import create_otp_record, verify_otp
 from app.utils.token_service import create_token
 from app.rabbitmq.sms_payload import get_sms_payload
-from app.rabbitmq.producer import publish_message
+from app.rabbitmq.producer import publish_with_timeout
 
 load_dotenv()
 
 
-def user_register(req, db: Session):
+def user_register(req, db: Session, background_tasks):
     # Check if user already exists
     existing_user = (
         db.query(User)
@@ -51,17 +50,8 @@ def user_register(req, db: Session):
         )
         db.add(new_user)
 
-        # Mark all previous OTPs as verified
-        db.query(OTP).filter(
-            OTP.phone == req.phone,
-            OTP.verified.is_(False)
-        ).update(
-            {OTP.verified: True},
-            synchronize_session=False
-        )
-
-        # Generate new OTP
-        new_otp_record, plan_otp = create_otp_record(req.phone)
+        # Generate new OTP (invalidates previous OTPs in the same session)
+        new_otp_record, plan_otp = create_otp_record(req.phone, db)
 
         db.add(new_otp_record)
         db.commit()
@@ -71,20 +61,19 @@ def user_register(req, db: Session):
         # For development only
         print("New OTP:", plan_otp)
 
-        # SMS send through rabbitMQ
-        # try:
-        #    sms_payload = get_sms_payload(req.phone, plan_otp)
-        #    await asyncio.to_thread(publish_message, sms_payload)
+        # SMS send through rabbitMQ (fire-and-forget, after the response)
+        sms_payload = get_sms_payload(req.phone, plan_otp)
+        background_tasks.add_task(publish_with_timeout, sms_payload)
 
-        # except Exception as e:
-        #     print("Failed to publish OTP:", e)   
+
+
 
         # SMS_URL = os.getenv("SMS_API_URL")
         # SMS_API_KEY = os.getenv("SMS_API_KEY")
         
         # payload = {
         #     "api_key": SMS_API_KEY,
-        #     "msg": f"FreshMilk: Your verification code is {plan_otp}.",
+        #     "msg": f"Welcome to Gowala! Your one-time verification code is {plan_otp}. Enter it within 2 minutes to continue.",
         #     "to": req.phone,
         # }
         
@@ -128,7 +117,7 @@ def user_login(req, db: Session):
 
 
 
-def resend_otp(req, db: Session):
+def resend_otp(req, db: Session, background_tasks):
     existing_user = db.query(User).filter(User.phone == req.phone).first()
     if not existing_user:
         raise HTTPException(
@@ -137,12 +126,15 @@ def resend_otp(req, db: Session):
         )
 
     
-    new_otp_record, plan_otp = create_otp_record(req.phone)
+    new_otp_record, plan_otp = create_otp_record(req.phone, db)
     db.add(new_otp_record)
     db.commit()
     db.refresh(new_otp_record)
 
     print('Registerd User OTP: ', plan_otp)
+
+    sms_payload = get_sms_payload(req.phone, plan_otp)
+    background_tasks.add_task(publish_with_timeout, sms_payload)
 
     return {
         "success": True,

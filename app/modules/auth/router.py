@@ -1,7 +1,7 @@
 from app.core.db import get_db
 from sqlalchemy.orm import Session
 from app.utils.token_service import get_current_user
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Response, status
 from .schema import (
     RegisterSchema,
     ResendOTP,
@@ -23,9 +23,9 @@ from .service import (
 router = APIRouter(prefix='/auth', tags=["Auth"])
 
 @router.post('/register', description='New user registration')
-def register(req: RegisterSchema, db: Session = Depends(get_db)):
-    
-    return user_register(req, db)
+def register(req: RegisterSchema, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+
+    return user_register(req, db, background_tasks)
 
 
 # if user already registerd then login with otp
@@ -51,9 +51,9 @@ def login(req: LoginSchema, res: Response, db: Session = Depends(get_db)):
 
 # if already registerd then resnd otp to the user for again login then call login api
 @router.post('/resend-otp', description='OTP send to the registerd users')
-def resend(req: ResendOTP, db: Session = Depends(get_db)):
+def resend(req: ResendOTP, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
 
-    return resend_otp(req, db)
+    return resend_otp(req, db, background_tasks)
 
 
 @router.post('/verify-otp', description='OTP verifying')

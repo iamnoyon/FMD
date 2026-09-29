@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, inspect, text
+from sqlalchemy import create_engine, inspect, text, event
 from enum import Enum
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 import os
@@ -12,7 +12,29 @@ engine = create_engine(
     DB_URL,
     pool_pre_ping=True,
     pool_recycle=300,
+    pool_size=5,
+    max_overflow=10,
+    pool_timeout=10,
 )
+
+
+@event.listens_for(engine, "connect")
+def _set_statement_timeouts(dbapi_connection, connection_record):
+    cursor = None
+    try:
+        cursor = dbapi_connection.cursor()
+        cursor.execute("SET statement_timeout = '10s'")
+        cursor.execute("SET lock_timeout = '5s'")
+        dbapi_connection.commit()
+    except Exception as e:
+        print(f"[db] could not set statement timeouts: {e}")
+        try:
+            dbapi_connection.rollback()
+        except Exception:
+            pass
+    finally:
+        if cursor is not None:
+            cursor.close()
 
 localSession = sessionmaker(
     bind=engine,
@@ -95,6 +117,17 @@ def auto_sync_schema():
                     print(f"[auto-sync] ALTER TABLE {table_name} ADD COLUMN {col.name} {ddl}")
 
             _add_enum_check_constraints(conn, inspector)
+
+            for table in Base.metadata.sorted_tables:
+                if not inspector.has_table(table.name):
+                    continue
+                for idx in table.indexes:
+                    if not idx.name:
+                        continue
+                    columns = ", ".join(f'"{c.name}"' for c in idx.columns)
+                    conn.execute(text(
+                        f'CREATE INDEX IF NOT EXISTS "{idx.name}" ON "{table.name}" ({columns})'
+                    ))
     except Exception as e:
         print(f"[auto-sync] skipped: {e}")
 

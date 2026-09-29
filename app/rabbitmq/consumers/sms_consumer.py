@@ -5,6 +5,7 @@ import requests
 from dotenv import load_dotenv
 
 from ..consumer import start_consuming
+from ..producer import SMS_QUEUE
 
 load_dotenv()
 
@@ -35,13 +36,13 @@ def handle_sms_message(data):
 
     print(payload)
 
-    # try:
-    #     response = requests.request("POST", SMS_URL, data=payload, timeout=10)
-    #     response.raise_for_status()
-    #     print("SMS sent successfully. Response:", response.text)
-    # except requests.RequestException:
-    #     pass
+    try:
+        response = requests.request("POST", SMS_URL, data=payload, timeout=10)
+        response.raise_for_status()
+        print("SMS sent successfully. Response:", response.text)
+    except requests.RequestException:
+        pass
 
 
 if __name__ == "__main__":
-    start_consuming("sms_consumer", handle_sms_message)
+    start_consuming(SMS_QUEUE, handle_sms_message)
